@@ -8,3 +8,4 @@ dist/
 coverage/
 reports/
 django_geonode_client.egg-info/
+package-lock.json
