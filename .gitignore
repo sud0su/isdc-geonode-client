@@ -7,5 +7,5 @@ dist/
 .tmp
 coverage/
 reports/
-django_geonode_client.egg-info/
+isdc_geonode_client.egg-info/
 package-lock.json

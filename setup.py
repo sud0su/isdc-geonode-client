@@ -6,12 +6,12 @@ with open(os.path.join(here, 'VERSION')) as version_file:
         version = version_file.read().strip()
 
 setup(
-    name='django-geonode-client',
+    name='isdc-geonode-client',
     version=version,
-    author='Mila Frerichs',
+    author='iMMAP',
     author_email='mila.frerichs@gmail.com',
-    url='https://github.com/GeoNode/geonode-client',
-    description="Use GeoNode client in your django projects",
+    url='https://github.com/sud0su/isdc-geonode-client',
+    description="GeoNode client for private projects",
     long_description=open(os.path.join(here, 'README.md')).read(),
     license='LGPL, see LICENSE file.',
     install_requires=[],

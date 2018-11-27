@@ -1,5 +1,5 @@
-# FILE=VERSION
-# VERSION=`cat $(FILE)`
+FILE=VERSION
+VERSION=`cat $(FILE)`
 
 .PHONY: build geonode package release
 
@@ -8,11 +8,9 @@ build:
 
 geonode: build
 	npm run geonode:deploy
-# package: geonode
-# 	python setup.py sdist bdist_wheel
 
 package: geonode
-	python setup.py sdist
+	python setup.py sdist bdist_wheel
 
-# release: package
-# 	twine upload dist/django-geonode-client-$(VERSION).tar.gz
+release: package
+	twine upload dist/isdc-geonode-client-$(VERSION).tar.gz
