@@ -1,7 +1,7 @@
 {% load geonode_client_tags %}
 {% load url from future %}
 
-{% client_viewer_js	%}
+{% client_viewer_js %}
 
 <style>
         body {
@@ -53,7 +53,7 @@
         tools: [{ptype: "gxp_getfeedfeatureinfo"}],
 		};
 		var config = Object.assign( defaultConfig, {{ config|safe }});
-    var options = {mapConfig: config};
+    var options = {mapConfig: config, server: "{{SITEURL}}"};
     if (config.proxy !== '') {
       options.proxy = "{{PROXY_URL}}";
     }

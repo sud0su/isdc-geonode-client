@@ -13,6 +13,8 @@ class Viewer {
     this._printLayouts = options.printLayouts;
     this._theme = options.theme;
     this._crossOriginCredentials = options.crossOriginCredentials;
+    this._geoserver = options.mapConfig.localGeoServerBaseUrl;
+    this._localserver = options.server;
   }
   set mapConfig(value) {
     this._mapConfig = value;
@@ -29,6 +31,12 @@ class Viewer {
   set theme(value) {
     this._theme = value;
   }
+  set geoserver(value){
+    this._geoserver = value;
+  }
+  set localserver(value){
+    this._localserver = value;
+  }
   view() {
     ReactDOM.render(
       <IntlProvider locale='en' messages={enMessages}>
@@ -39,6 +47,8 @@ class Viewer {
           config={this._mapConfig} 
           proxy={this._proxy} 
           crossOriginCredentials={this._crossOriginCredentials} 
+          geoserver={this._geoserver}
+          localserver={this._localserver}
         />
       </IntlProvider>, document.getElementById(this._domId));
   }

@@ -48,6 +48,19 @@ injectTapEventPlugin();
 addLocaleData(enLocaleData);
 
 ////////////////////// added by razinal
+function buildUrl(url, parameters) {
+  var qs = "";
+  for (var key in parameters) {
+      var value = parameters[key];
+      qs += encodeURIComponent(key) + "=" + encodeURIComponent(value) + "&";
+  }
+  if (qs.length > 0) {
+      qs = qs.substring(0, qs.length - 1); //chop off last "&"
+      url = url + "?" + qs;
+  }
+  return url;
+}
+
 var raster = new ol.layer.Tile({
   title: 'OSM Streets',
   type: 'base',
@@ -106,6 +119,27 @@ var areaVectorLayer = new ol.layer.Vector({
 		})
 	})
 });
+// -------------------- Province Area
+var areaProvinceSource = new ol.source.Vector();
+var areaProvinceLayer = new ol.layer.Vector({
+  title: 'Province',
+	source: areaVectorSource,
+	style: new ol.style.Style({
+		fill: new ol.style.Fill({
+			color: 'rgba(255,192,192,0.5)'
+		}),
+		stroke: new ol.style.Stroke({
+			color: 'red',
+			width: 2
+		}),
+		image: new ol.style.Circle({
+			radius: 7,
+			fill: new ol.style.Fill({
+				color: 'red'
+			})
+		})
+	})
+});
 ////////////////////////////// end
 
 var map = new ol.Map({
@@ -113,7 +147,7 @@ var map = new ol.Map({
     new ol.control.Attribution({ collapsible: false }),
     new ol.control.ScaleLine()
   ],
-  layers: [raster, inspectorVectorLayer, areaVectorLayer],
+  layers: [raster, inspectorVectorLayer, areaVectorLayer, areaProvinceLayer],
   view: new ol.View({
     center: [
       0, 0
@@ -130,14 +164,11 @@ const isdc = {
   leftbox: {
     boxShadow: 'none',
     borderRadius: '0',
-    // backgroundColor: '#b71c1c',
     backgroundColor: 'rgba(255,255,255,1)',
     padding: '1px'
   },
   rightbox: {
     boxShadow: 'none',
-    // borderBottomLeftRadius: 5,
-    // borderBottomRightRadius: 5,
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
     backgroundColor: 'rgba(255,255,255,1)',
@@ -150,6 +181,7 @@ const isdc = {
   }
 }
 
+let _getServer, _getLocal;
 class GeoNodeViewer extends React.Component {
   constructor(props) {
     super(props);
@@ -161,7 +193,10 @@ class GeoNodeViewer extends React.Component {
       styleIcon: "iconSize"
     };
     this._local = getLocalGeoServer(props.config.sources, props.baseUrl);
+    
     // added by razinal
+    _getServer = props.geoserver;
+    _getLocal = props.localserver;
     window.getFunction = this;
   }
 
@@ -234,10 +269,6 @@ class GeoNodeViewer extends React.Component {
       const inputlat = parseFloat(document.querySelector('input[name=north41]').value);
       const inputlon = parseFloat(document.querySelector('input[name=east41]').value);
       const UTMCoordinate = converter.UTMtoLL(inputlat,inputlon,41);
-
-      console.log(UTMCoordinate);
-      console.log(UTMCoordinate.lat);
-      console.log(UTMCoordinate.lon);
 
       const tostringHDMS = ol.coordinate.toStringHDMS([UTMCoordinate.lon, UTMCoordinate.lat], 1);
       const WGS84 = tostringHDMS.split("N")[0]+' N <br/> '+tostringHDMS.split("N")[1];
@@ -392,9 +423,10 @@ class GeoNodeViewer extends React.Component {
         var format = new ol.format.WKT();
         var geometry = (evt.feature.getGeometry()).clone();
         try {
-          var f = format.writeGeometry(geometry.transform('EPSG:900913', 'EPSG:4326'))
+          var f = format.writeGeometry(geometry.transform('EPSG:900913', 'EPSG:4326'));
           console.log(f);
-          window.drawBaseline._getPolygonArea(f);
+          // window.getBaselineArea._getBaselineArea(f);
+          window._getPoylgon = f;
         } catch (e) {
           console.log(e);
         }
@@ -433,9 +465,70 @@ class GeoNodeViewer extends React.Component {
       // map.getView().setCenter(ol.proj.fromLonLat([lon, lat]));
       // map.getView().setZoom(6);
       map.addLayer(inspectorVectorLayer); 
-      window.inspectorFunction._handleInspector(lon,lat);
+
+
+      const zoom = map.getView().getZoom(); 
+      const viewResolution = /** @type {number} */ (map.getView().getResolution());
+      const minx = coord[0] - viewResolution * 500;
+      const maxx = coord[0] + viewResolution * 500;
+      const miny = coord[1] - viewResolution * 500;
+      const maxy = coord[1] + viewResolution * 500;
+      const settlementBbox = minx+','+miny+','+maxx+','+maxy; 
+      
+      console.log(_getLocal);
+      console.log(_getServer);
+
+      const insUrl = _getServer+'wms';
+      // const insUrl = _getLocal+'/proxy/?url='+_getServer+'wms';
+      // const insUrl = _getLocal+'/proxy/?url='+encodeURIComponent(_getServer+'wms');
+      console.log(insUrl);
+
+      const getMapId = document.getElementById("map");
+      const getComputedStyle = getMapId.getBoundingClientRect();
+      const widthX = /** @type {number} */ (getComputedStyle.width / 2);
+      const heightY = /** @type {number} */ (getComputedStyle.height / 2);
+
+      const params = {
+        LAYERS: 'geonode:afg_ppla',
+        QUERY_LAYERS: 'geonode:afg_ppla',
+        STYLES: 'polygon',
+        SERVICE: 'WMS',
+        VERSION: '1.1.1',
+        REQUEST: 'GetFeatureInfo',
+        BBOX: settlementBbox,
+        FEATURE_COUNT: '10',
+        HEIGHT: getComputedStyle.height,
+        WIDTH: getComputedStyle.width,
+        FORMAT: 'image/png8',
+        INFO_FORMAT: 'application/json',
+        SRS:'EPSG:900913',
+        X: Math.trunc(widthX),
+        Y: Math.trunc(heightY)
+      }
+      
+      let getVuid = {};
+      fetch(buildUrl(insUrl, params), {
+        credentials: 'include',
+        method: 'GET',
+        headers: {
+          'Accept': '*/*',
+          // "Content-Type": "application/json; charset=utf-8",
+          // 'X-CSRFToken': getCRSFToken(),
+          // 'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+        .then(response => {
+          if (response.ok) {
+            response.json().then(json => {
+              getVuid['features'] = json.features;
+              window.inspectorFunction._handleInspector(lon,lat,getVuid);
+            });
+          }
+        })
+        
       //// end marker
     };
+
     if (getInspector === true) {
       map.on('singleclick', LatLongInspector);
     } else {
@@ -443,6 +536,44 @@ class GeoNodeViewer extends React.Component {
       inspectorVectorLayer.getSource().clear();
       map.removeEventListener('singleclick');
     }
+  }
+
+  _selectedProv(provFeatures){
+    const geojson = {
+      "type": "Feature",
+      "geometry": provFeatures[0].geometry,
+      "properties": {
+        "name": provFeatures[0].properties.prov_na_en
+      }
+    }
+    const geojsonObject = {
+      'type': 'FeatureCollection',
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:EPSG::900913"
+        }
+      },
+      'features': [geojson]
+    }
+    console.log(geojsonObject);
+    
+    // var vectorSource = new ol.source.Vector({
+    //   features: (new ol.format.GeoJSON()).readFeatures(geojsonObject, { defaultDataProjection: 'EPSG:4326',featureProjection:'EPSG:3857' })
+    // });
+
+    const areaProvSelected = new ol.Feature({
+      geometry: new ol.Feature((new ol.format.GeoJSON()).readFeatures(geojsonObject))
+    }); 
+    areaProvinceSource.addFeature(areaProvSelected);
+
+    // var vectorLayer = new ol.layer.Vector({
+    //   source: vectorSource,
+    //   style: styleFunction
+    // });
+
+    map.addLayer(areaProvinceLayer); 
+    // map.getView().setZoom(6);
   }
   ////////////////////////// end
 
@@ -506,7 +637,7 @@ class GeoNodeViewer extends React.Component {
         sources: [
           {
             title: 'Local Geoserver',
-            url: this.props.server + '/geoserver/wms',
+            url: this.props.baseUrl + 'wms',
             type: 'WMS'
           }
         ],

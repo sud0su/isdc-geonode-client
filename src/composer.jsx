@@ -23,7 +23,7 @@ class Composer {
     this._printLayouts = options.printLayouts;
     this._theme = options.theme;
     this._baseUrl = options.baseUrl;
-    this._crossOriginCredentials = options.crossOriginCredentials;
+    this._crossOriginCredentials = options.crossOriginCredentials; 
   }
   set server(value) {
     this._server = value;

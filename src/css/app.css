@@ -57,6 +57,7 @@ html, body {
   box-shadow: 0px 1px 4px rgba(0,0,0,0.3);
 }
 .layerListStyle{
+  -webkit-appearance: none !important;
   /* border-radius: 0px;
   background-color: rgb(255, 255, 255);
   padding: 1px;
@@ -67,6 +68,15 @@ html, body {
   -webkit-border-top-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
   border-top-left-radius: 5px; */
+}
+
+.boxSave {    
+  padding: 10px;
+  margin: 10px 0px 0px;
+}
+
+.geoinput {
+  height: 70% !important;
 }
 
 .headerIcons {
@@ -252,4 +262,8 @@ html, body {
 
 .tooltip-static:before {
   border-top-color: #ffcc33;
+}
+
+button, html [type="button"], [type="reset"], [type="submit"] {
+  -webkit-appearance: none !important;
 }

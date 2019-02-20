@@ -132,9 +132,11 @@ export class SaveView extends React.Component {
     }
     return (
       <div className='save-modal'>
-        <Dialog className='save-map-modal' actions={actions} autoScrollBodyContent={true} modal={true} title={formatMessage(messages.title)} open={this.props.open} onRequestClose={this._handleClose.bind(this)}>
-          <TextField defaultValue={this.props.maptitle} ref='maptitle' floatingLabelText={formatMessage(messages.maptitle)}/><br/>
-          <TextField defaultValue={this.props.mapabstract} ref='mapabstract' floatingLabelText={formatMessage(messages.mapabstract)} />
+        <Dialog className={"save-map-modal"} actions={actions} autoScrollBodyContent={true} modal={true} title={formatMessage(messages.title)} open={this.props.open} onRequestClose={this._handleClose.bind(this)}>
+          <div className={"boxSave"}>
+            <TextField className={"geoinput"} style={{"margin-top":"10px"}} floatingLabelStyle={{"top":"9"}} defaultValue={this.props.maptitle} ref='maptitle' floatingLabelText={formatMessage(messages.maptitle)}/><br/>
+            <TextField className={"geoinput"} style={{"margin-top":"10px"}} floatingLabelStyle={{"top":"9"}} defaultValue={this.props.mapabstract} ref='mapabstract' floatingLabelText={formatMessage(messages.mapabstract)} />
+          </div>
           {error}
           {success}
         </Dialog>
